@@ -100,6 +100,11 @@ Lo que sigue se midió el 2026-10-17 entre dos sesiones de Claude Code en la mis
   turno nuevo, con una línea de resumen de lo que hizo la otra sesión. La sesión que recibe también ve la suscripción:
   su tab mostró que la dirección de `bugs` pidió que le avisaran cuando quedara libre. Su `SendMessage` de respuesta lo
   aprobó el clasificador del modo auto, sin preguntarle a nadie.
+- **Una tarea que llega mientras la sesión trabaja queda en cola (medido el 2026-10-17, `prueba-ris`):** la tarea A (un
+  comando de 61 s) se mandó con la sesión libre; la B, con `when: after-current`, mientras corría A. El registro de la
+  sesión que recibe muestra el orden: recibe A (14:55:42), termina el comando de A (14:56:46), registra B y contesta A
+  en el mismo segundo (14:56:53), y recién después contesta B (14:57:08). B le llegó en la primera pausa del trabajo y
+  no lo cortó.
 - **Según la descripción de la herramienta `SendMessage`, no medido:** una sesión en otro modo de permisos retiene el
   mensaje hasta que su persona lo aprueba; las sesiones en la nube reciben pero no pueden contestar; las de Remote
   Control offline lo reciben cuando se reconectan. Que el envío salga bien no quiere decir que alguien lo leyó.
