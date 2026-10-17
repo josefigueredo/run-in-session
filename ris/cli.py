@@ -211,5 +211,6 @@ def parser() -> argparse.ArgumentParser:
 def main(argv: Optional[List[str]] = None) -> int:
     args = parser().parse_args(argv)
     if getattr(args, "ref", None) is not None and not state.REF.match(args.ref):
-        return _err(f"--as {args.ref!r}: use the [ref] ListAgents shows for this session, like 48ff1d", USAGE)
+        return _err(f"--as {args.ref!r}: that looks like a session name; use the [ref] ListAgents shows for this "
+                    f"session, like 48ff1d (lowercase hex)", USAGE)
     return args.func(args)

@@ -67,6 +67,16 @@ class TaskNewTest(unittest.TestCase):
         bad[bad.index("--as") + 1] = "../x"
         self.assertEqual(run_cli(bad, make_dir()).returncode, 2)
 
+    def test_a_session_name_instead_of_its_ref_is_refused_without_opening_a_log(self):
+        # measured 2026-10-17: before this check, `--as bugs` exited 0 and silently opened sessions/bugs/
+        for name in ("bugs", "main-session", "emu", "prueba-ris", "48FF1D"):
+            home = make_dir()
+            out = run_cli(["task", "list", "--as", name], home)
+            self.assertEqual(out.returncode, 2, name)
+            self.assertIn("name", out.stderr)
+            self.assertFalse((home / "sessions").exists(), name)
+        self.assertEqual(run_cli(["task", "list", "--as", "e083c1"], make_dir()).returncode, 0)
+
 
 class ParseTest(unittest.TestCase):
     def test_a_received_task_prints_json_and_is_logged_from_its_sender(self):

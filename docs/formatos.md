@@ -152,7 +152,7 @@ Los reclamos son de este usuario en esta máquina. Una sesión en otra máquina 
 | Código | Cuándo |
 |---|---|
 | 0 | Salió bien |
-| 2 | Uso: falta un argumento, `--as` no es una referencia válida, un valor tiene un salto de línea, un ítem de `touches` o `forbidden` tiene `;`, el contexto tiene una línea de marca, un `status` desconocido |
+| 2 | Uso: falta un argumento, `--as` no es una referencia (hexadecimal en minúscula, de 4 a 32; un nombre de sesión no pasa), un valor tiene un salto de línea, un ítem de `touches` o `forbidden` tiene `;`, el contexto tiene una línea de marca, un `status` desconocido |
 | 3 | Rechazado: el mensaje coincide con un `--deny`, o la rama o el archivo los tiene otra sesión |
 | 4 | El texto no trae un mensaje válido: no tiene marca, le falta un campo o el bloque está cortado |
 | 5 | La marca es de una versión que este `ris` no lee |

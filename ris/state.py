@@ -30,7 +30,10 @@ def now() -> str:
 
 # --- log (one per session) --------------------------------------------------------------------------------------------
 
-REF = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+# Every [ref] ListAgents showed on 2026-10-17 (19 of them) was 6 lowercase hex digits. Lowercase hex of 4 to 32 keeps a
+# session name (bugs, main-session, emu) out, which would otherwise open a second log silently; a name made only of
+# a-f and digits would still pass.
+REF = re.compile(r"^[0-9a-f]{4,32}$")
 
 
 def _log(ref: str) -> Path:
