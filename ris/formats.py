@@ -14,6 +14,7 @@ VERSION = 1
 STATUSES = ("done", "partial", "declined", "failed")
 
 _OPEN = re.compile(r"^--- ris-(task|reply) v(\d+) ---$", re.M)
+_MARKER = re.compile(r"^--- (end )?ris-(task|reply)( v\d+)? ---$", re.M)
 _FIELD = re.compile(r"^([a-z][a-z-]*): ?(.*)$")
 
 
@@ -79,6 +80,8 @@ def render_task(task: Task) -> str:
         f"forbidden: {'; '.join(_items('forbidden', task.forbidden, inline=True))}",
         "--- context ---",
     ]
+    if _MARKER.search(task.context):
+        raise FormatError("context has a ris marker line, which would cut the message; quote it differently")
     if task.context.strip():
         lines.append(task.context.strip("\n"))
     lines.append("--- end ris-task ---")
@@ -114,10 +117,10 @@ def parse(text: str) -> Union[Task, Reply]:
     if version != VERSION:
         raise UnsupportedVersion(f"ris-{kind} v{version}: this ris reads v{VERSION}")
     end = f"--- end ris-{kind} ---"
-    close = text.find(end, opening.end())
-    if close < 0:
+    closing = re.compile(rf"^{re.escape(end)}$", re.M).search(text, opening.end())
+    if not closing:
         raise FormatError(f"no '{end}' line: the message is cut")
-    body = text[opening.end():close].strip("\n").splitlines()
+    body = text[opening.end():closing.start()].strip("\n").splitlines()
     return _parse_task(body) if kind == "task" else _parse_reply(body)
 
 

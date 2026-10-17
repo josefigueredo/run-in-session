@@ -8,14 +8,20 @@ import unittest
 
 from helpers import make_dir, run_cli
 
-NEW = ["task", "new", "--from", "bugs", "--to", "main-session", "--to-ref", "248292",
+ME, PEER = "48ff1d", "248292"
+NEW = ["task", "new", "--as", ME, "--from", "bugs", "--to", "main-session", "--to-ref", PEER,
        "--goal", "Rebase feat/mcp-integration on fix/20", "--done", "merges clean and tests pass",
        "--touch", "feat/mcp-integration", "--forbid", "push"]
 
 
-def log(home) -> list:
-    path = home / "log.jsonl"
+def log(home, ref: str = ME) -> list:
+    path = home / "sessions" / ref / "log.jsonl"
     return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+
+
+def reply_text(home, task_id: str, ref: str = PEER) -> str:
+    return run_cli(["task", "reply", task_id, "--as", ref, "--from", "main-session", "--status", "done",
+                    "--summary", "Rebased", "--evidence", "git log -1: abc"], home).stdout
 
 
 class TaskNewTest(unittest.TestCase):
@@ -26,7 +32,7 @@ class TaskNewTest(unittest.TestCase):
         self.assertRegex(out.stdout.splitlines()[0], r"^ris task \d{8}-\d{6}-[0-9a-f]{4} from bugs: Rebase")
         self.assertIn("fix/20 is pushed", out.stdout)
         [entry] = log(home)
-        self.assertEqual((entry["event"], entry["peer"], entry["peer_ref"]), ("sent", "main-session", "248292"))
+        self.assertEqual((entry["event"], entry["peer"], entry["peer_ref"]), ("sent", "main-session", PEER))
         self.assertEqual(entry["goal"], "Rebase feat/mcp-integration on fix/20")
 
     def test_context_can_come_from_stdin(self):
@@ -43,64 +49,73 @@ class TaskNewTest(unittest.TestCase):
         self.assertEqual(log(home), [])
 
     def test_a_goal_on_two_lines_is_a_usage_error(self):
-        out = run_cli(["task", "new", "--from", "a", "--to", "b", "--goal", "x\ny", "--done", "d"], make_dir())
+        out = run_cli(["task", "new", "--as", ME, "--from", "a", "--to", "b", "--goal", "x\ny", "--done", "d"], make_dir())
         self.assertEqual(out.returncode, 2)
+
+    def test_a_context_line_that_would_close_the_block_is_a_usage_error(self):
+        out = run_cli(NEW + ["--context", "-"], make_dir(), stdin="forwarded:\n--- end ris-task ---\nmore\n")
+        self.assertEqual(out.returncode, 2)
+        self.assertIn("marker", out.stderr)
+
+    def test_the_session_ref_is_required_and_checked(self):
+        self.assertEqual(run_cli(NEW[:2] + NEW[4:], make_dir()).returncode, 2)
+        bad = list(NEW)
+        bad[bad.index("--as") + 1] = "../x"
+        self.assertEqual(run_cli(bad, make_dir()).returncode, 2)
 
 
 class ParseTest(unittest.TestCase):
-    def _task_text(self, home) -> str:
-        return run_cli(NEW, home).stdout
-
     def test_a_received_task_prints_json_and_is_logged_from_its_sender(self):
-        sender, receiver = make_dir(), make_dir()
-        text = "Another Claude session sent a message:\n" + self._task_text(sender)
-        out = run_cli(["parse"], receiver, stdin=text)
+        home = make_dir()
+        text = "Another Claude session sent a message:\n" + run_cli(NEW, home).stdout
+        out = run_cli(["parse", "--as", PEER], home, stdin=text)
         self.assertEqual(out.returncode, 0, out.stderr)
         data = json.loads(out.stdout)
         self.assertEqual((data["kind"], data["from"], data["goal"]), ("task", "bugs", "Rebase feat/mcp-integration on fix/20"))
-        [entry] = log(receiver)
+        [entry] = log(home, PEER)
         self.assertEqual((entry["event"], entry["peer"]), ("received", "bugs"))
 
-    def test_a_reply_to_a_task_we_sent_closes_it(self):
-        sender, receiver = make_dir(), make_dir()
-        task_id = json.loads(run_cli(["parse"], receiver, stdin=self._task_text(sender)).stdout)["id"]
-        reply = run_cli(["task", "reply", task_id, "--from", "main-session", "--status", "done",
-                         "--summary", "Rebased", "--evidence", "git log -1: abc"], receiver).stdout
-        out = run_cli(["parse"], sender, stdin=reply)
+    def test_two_sessions_sharing_one_home_keep_separate_logs(self):
+        home = make_dir()  # the normal case: same user, same machine, same ~/.run-in-session
+        task = run_cli(NEW, home).stdout
+        task_id = task.split()[2]
+        self.assertEqual(run_cli(["parse", "--as", PEER], home, stdin=task).returncode, 0)
+        reply = reply_text(home, task_id)
+        self.assertRegex(run_cli(["task", "list", "--open", "--as", ME], home).stdout, r"sent\s+main-session \[248292\]\s+open")
+        self.assertRegex(run_cli(["task", "list", "--as", PEER], home).stdout, r"received\s+bugs\s+done")
+        out = run_cli(["parse", "--as", ME], home, stdin=reply)
         self.assertEqual(out.returncode, 0, out.stderr)
-        self.assertEqual(json.loads(out.stdout)["status"], "done")
-        self.assertEqual(run_cli(["task", "list", "--open"], sender).stdout.strip(), "no open tasks")
+        self.assertEqual(run_cli(["task", "list", "--open", "--as", ME], home).stdout.strip(), "no open tasks")
 
-    def test_a_reply_whose_id_we_never_sent_is_flagged(self):
-        receiver, stranger = make_dir(), make_dir()
-        reply = run_cli(["task", "reply", "20990101-000000-ffff", "--from", "x", "--status", "done", "--summary", "s"],
-                        receiver).stdout
-        out = run_cli(["parse"], stranger, stdin=reply)
+    def test_a_reply_to_a_task_another_local_session_sent_is_flagged(self):
+        home = make_dir()
+        task_id = run_cli(NEW, home).stdout.split()[2]  # sent by ME
+        out = run_cli(["parse", "--as", "c0ffee"], home, stdin=reply_text(home, task_id))
         self.assertEqual(out.returncode, 6)
-        self.assertIn("not in this log", out.stderr)
-        self.assertEqual(json.loads(out.stdout)["id"], "20990101-000000-ffff")
+        self.assertIn("not in this session's log", out.stderr)
+        self.assertEqual(json.loads(out.stdout)["id"], task_id)
 
     def test_text_with_no_message_is_exit_4_and_an_unknown_version_exit_5(self):
         home = make_dir()
-        self.assertEqual(run_cli(["parse"], home, stdin="hola").returncode, 4)
-        v2 = self._task_text(home).replace("ris-task v1", "ris-task v2")
-        self.assertEqual(run_cli(["parse"], home, stdin=v2).returncode, 5)
+        self.assertEqual(run_cli(["parse", "--as", ME], home, stdin="hola").returncode, 4)
+        v2 = run_cli(NEW, home).stdout.replace("ris-task v1", "ris-task v2")
+        self.assertEqual(run_cli(["parse", "--as", ME], home, stdin=v2).returncode, 5)
 
 
 class ListTest(unittest.TestCase):
-    def test_open_lists_sent_and_received_tasks_without_reply(self):
+    def test_open_lists_sent_tasks_without_reply(self):
         home = make_dir()
         run_cli(NEW, home)
-        out = run_cli(["task", "list", "--open"], home)
+        out = run_cli(["task", "list", "--open", "--as", ME], home)
         self.assertRegex(out.stdout, r"sent\s+main-session \[248292\]\s+open\s+Rebase")
 
     def test_show_prints_every_event_of_a_task(self):
         home = make_dir()
         task_id = run_cli(NEW, home).stdout.split()[2]
-        out = run_cli(["task", "show", task_id], home)
+        out = run_cli(["task", "show", task_id, "--as", ME], home)
         self.assertEqual(out.returncode, 0)
         self.assertEqual(json.loads(out.stdout)[0]["event"], "sent")
-        self.assertEqual(run_cli(["task", "show", "nope"], home).returncode, 6)
+        self.assertEqual(run_cli(["task", "show", "nope", "--as", ME], home).returncode, 6)
 
 
 class ClaimTest(unittest.TestCase):
@@ -118,6 +133,10 @@ class ClaimTest(unittest.TestCase):
         other = make_dir()
         subprocess.run(["git", "init", "-q", str(other)], check=True)
         self.assertEqual(run_cli(["who", "fix/20"], self.home, cwd=other).stdout.strip(), "fix/20 free")
+
+    def test_dash_c_points_at_the_repo_whatever_the_cwd(self):
+        run_cli(["-C", str(self.repo), "claim", "a.ts", "--session", "bugs"], self.home, cwd=make_dir())
+        self.assertRegex(run_cli(["who", "a.ts"], self.home, cwd=self.repo).stdout, r"^a.ts\s+bugs")
 
     def test_only_the_owner_releases(self):
         run_cli(["claim", "a.ts", "--session", "bugs"], self.home, cwd=self.repo)

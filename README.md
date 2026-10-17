@@ -6,7 +6,8 @@ modelo; vos mirás su tab y podés intervenir cuando quieras. Cuando termina, co
 pidió verifica la evidencia antes de contártela.
 
 Los mensajes viajan con las herramientas `ListAgents` y `SendMessage` de Claude Code. `ris` no manda nada: arma y lee
-los mensajes, y lleva el registro y los reclamos de cada sesión.
+los mensajes, y lleva el registro de cada sesión (uno por sesión, aunque compartan máquina) y los reclamos de ramas
+y archivos.
 
 ## Qué le pedís al agente
 

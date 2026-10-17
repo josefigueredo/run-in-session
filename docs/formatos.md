@@ -5,8 +5,8 @@ mensajes los arma `ris` y los manda el agente con su herramienta `SendMessage`. 
 
 ## Reglas comunes a los dos mensajes
 
-- **La primera línea se entiende sola.** La sesión que recibe muestra solo esa línea hasta que se despliega el mensaje,
-  así que dice quién pide qué, o qué pasó con la tarea.
+- **La primera línea se entiende sola.** Según la descripción de `SendMessage` (no medido), quien recibe ve solo esa
+  línea hasta que despliega el mensaje. Por eso dice quién pide qué, o qué pasó con la tarea.
 - **Los campos van en un bloque con marca de versión.** La tarea va entre `--- ris-task v1 ---` y
   `--- end ris-task ---`, y la respuesta entre `--- ris-reply v1 ---` y `--- end ris-reply ---`. `ris parse` busca el
   bloque en cualquier parte del texto, porque el canal envuelve el mensaje con sus propias líneas (ver
@@ -43,7 +43,7 @@ Si aparece un conflicto en chat.service.ts, quedate con la versión de fix/20.
 | `done-when` | sí | Cuándo la tarea cuenta como terminada. Sirve para que la respuesta diga `done` o `partial` sin discutir |
 | `touches` | no | Ramas o archivos que la tarea puede cambiar, separados por `; ` (por eso un ítem no puede tener `;`) |
 | `forbidden` | no | Lo que no tiene que hacer, separado por `; ` |
-| `--- context ---` | sí, puede quedar vacío | Texto libre, varias líneas, hasta `--- end ris-task ---` |
+| `--- context ---` | sí, puede quedar vacío | Texto libre, varias líneas, hasta `--- end ris-task ---`. No puede tener una línea que parezca una marca (`--- ris-task v1 ---`, `--- end ris-reply ---`…), porque cortaría el mensaje: `ris task new` sale con 2 |
 
 ## Respuesta
 
@@ -92,8 +92,14 @@ Lo que sigue se midió el 2026-10-17 entre dos sesiones de Claude Code en la mis
 
 ## Registro
 
-`$RIS_HOME/log.jsonl` (por defecto `~/.run-in-session/log.jsonl`): una línea JSON por evento, solo con lo que vio esta
-sesión. El otro lado tiene su propio registro: no se comparte nada.
+`$RIS_HOME/sessions/<ref>/log.jsonl` (por defecto `~/.run-in-session/sessions/<ref>/log.jsonl`): una línea JSON por
+evento, solo con lo que vio esa sesión. `<ref>` es la referencia de la sesión en el encabezado de `ListAgents` (por
+ejemplo `bugs [48ff1d]`), y se pasa con `--as` a todo comando que lee o escribe el registro.
+
+¿Por qué uno por sesión? Porque dos sesiones del mismo usuario en la misma máquina comparten `~/.run-in-session`. Con
+un solo archivo, la respuesta que escribe una cerraría la tarea en la lista de la otra, y una respuesta mal dirigida
+entre sesiones locales nunca daría el código 6. Se usa la referencia y no el nombre porque el nombre cambia con
+`/rename`.
 
 ```json
 {"ts": "2026-10-17T11:49:32-0300", "event": "sent", "id": "20261017-114932-8e16", "peer": "main-session", "peer_ref": "248292", "goal": "x"}
@@ -107,13 +113,16 @@ sesión. El otro lado tiene su propio registro: no se comparte nada.
 | `replied` | `ris task reply` | `status`; `peer` sale de la tarea recibida, vacío si no está en el registro |
 | `reply-received` | `ris parse` de una respuesta a una tarea propia | `status` |
 
-`ris task list` arma una fila por tarea: está `open` hasta que hay una respuesta, y después muestra su `status`.
+`ris task list --as <ref>` arma una fila por tarea de esa sesión: está `open` hasta que hay una respuesta, y después
+muestra su `status`.
 
 ## Reclamos
 
-`$RIS_HOME/claims.json`: quién tiene cada rama o archivo, separado por repo. La clave del repo es su directorio git
-común (`git rev-parse --git-common-dir`), así todos los worktrees de un clon ven lo mismo. Fuera de un repo, la clave
-es `(no repo)`.
+`$RIS_HOME/claims.json`: quién tiene cada rama o archivo, separado por repo. A diferencia del registro, se comparte
+entre las sesiones a propósito: dice cuál tiene qué. La clave del repo es su directorio git común
+(`git rev-parse --git-common-dir`), así todos los worktrees de un clon ven lo mismo. El repo es el de `-C <dir>`, o el
+directorio actual si no se pasa; fuera de un repo, la clave es `(no repo)`. `claim` y `release` toman un lock
+(`claims.lock`) mientras leen y escriben, así dos sesiones a la vez no pierden un reclamo.
 
 ```json
 {
@@ -130,11 +139,11 @@ Los reclamos son de este usuario en esta máquina. Una sesión en otra máquina 
 | Código | Cuándo |
 |---|---|
 | 0 | Salió bien |
-| 2 | Uso: falta un argumento, un valor tiene un salto de línea, un ítem de `touches` o `forbidden` tiene `;`, un `status` desconocido |
+| 2 | Uso: falta un argumento, `--as` no es una referencia válida, un valor tiene un salto de línea, un ítem de `touches` o `forbidden` tiene `;`, el contexto tiene una línea de marca, un `status` desconocido |
 | 3 | Rechazado: el mensaje coincide con un `--deny`, o la rama o el archivo los tiene otra sesión |
 | 4 | El texto no trae un mensaje válido: no tiene marca, le falta un campo o el bloque está cortado |
 | 5 | La marca es de una versión que este `ris` no lee |
-| 6 | Un `id` que no está en el registro: una respuesta a una tarea que esta sesión no mandó, o `ris task show` de un id desconocido |
+| 6 | Un `id` que no está en el registro de esa sesión: una respuesta a una tarea que no mandó, o `ris task show` de un id desconocido |
 
 ## Versiones
 

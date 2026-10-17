@@ -41,7 +41,7 @@ def cmd_task_new(a: argparse.Namespace) -> int:
     for pattern in a.deny or []:
         if re.search(pattern, text, re.I):
             return _err(f"the message matches --deny {pattern}; nothing was logged", REFUSED)
-    state.append({"event": "sent", "id": task.id, "peer": task.to, "peer_ref": a.to_ref or "", "goal": task.goal})
+    state.append(a.ref, {"event": "sent", "id": task.id, "peer": task.to, "peer_ref": a.to_ref or "", "goal": task.goal})
     sys.stdout.write(text)
     return OK
 
@@ -53,8 +53,8 @@ def cmd_task_reply(a: argparse.Namespace) -> int:
         text = formats.render_reply(reply)
     except FormatError as exc:
         return _err(str(exc), USAGE)
-    known = [e for e in state.events(a.id) if e["event"] == "received"]
-    state.append({"event": "replied", "id": a.id, "peer": known[0]["peer"] if known else "", "status": a.status})
+    known = [e for e in state.events(a.ref, a.id) if e["event"] == "received"]
+    state.append(a.ref, {"event": "replied", "id": a.id, "peer": known[0]["peer"] if known else "", "status": a.status})
     sys.stdout.write(text)
     return OK
 
@@ -70,19 +70,20 @@ def cmd_parse(a: argparse.Namespace) -> int:
     data["from"] = data.pop("sender")
     if isinstance(message, Task):
         data["kind"] = "task"
-        state.append({"event": "received", "id": message.id, "peer": message.sender, "goal": message.goal})
+        state.append(a.ref, {"event": "received", "id": message.id, "peer": message.sender, "goal": message.goal})
         print(json.dumps(data, ensure_ascii=False, indent=1))
         return OK
     data["kind"] = "reply"
     print(json.dumps(data, ensure_ascii=False, indent=1))
-    if not any(e["event"] == "sent" for e in state.events(message.id)):
-        return _err(f"reply to {message.id}, which is not in this log: this session never sent that task", UNKNOWN)
-    state.append({"event": "reply-received", "id": message.id, "peer": message.sender, "status": message.status})
+    if not any(e["event"] == "sent" for e in state.events(a.ref, message.id)):
+        return _err(f"reply to {message.id}, which is not in this session's log: this session never sent that task",
+                    UNKNOWN)
+    state.append(a.ref, {"event": "reply-received", "id": message.id, "peer": message.sender, "status": message.status})
     return OK
 
 
 def cmd_task_list(a: argparse.Namespace) -> int:
-    rows = [r for r in state.tasks() if not a.open or r["status"] == "open"]
+    rows = [r for r in state.tasks(a.ref) if not a.open or r["status"] == "open"]
     if not rows:
         print("no open tasks" if a.open else "no tasks")
         return OK
@@ -93,16 +94,21 @@ def cmd_task_list(a: argparse.Namespace) -> int:
 
 
 def cmd_task_show(a: argparse.Namespace) -> int:
-    found = state.events(a.id)
+    found = state.events(a.ref, a.id)
     if not found:
-        return _err(f"{a.id} is not in this log", UNKNOWN)
+        return _err(f"{a.id} is not in this session's log", UNKNOWN)
     print(json.dumps(found, ensure_ascii=False, indent=1))
     return OK
 
 
 def cmd_claim(a: argparse.Namespace) -> int:
+    with state.claims_lock():
+        return _claim(a)
+
+
+def _claim(a: argparse.Namespace) -> int:
     data = state.claims()
-    repo = data.setdefault(state.repo_key(), {})
+    repo = data.setdefault(state.repo_key(a.dir), {})
     taken = [r for r in a.resources if r in repo and repo[r]["session"] != a.session]
     if taken:
         owners = ", ".join(f"{r} ({repo[r]['session']})" for r in taken)
@@ -114,8 +120,13 @@ def cmd_claim(a: argparse.Namespace) -> int:
 
 
 def cmd_release(a: argparse.Namespace) -> int:
+    with state.claims_lock():
+        return _release(a)
+
+
+def _release(a: argparse.Namespace) -> int:
     data = state.claims()
-    repo = data.get(state.repo_key(), {})
+    repo = data.get(state.repo_key(a.dir), {})
     foreign = [r for r in a.resources if r in repo and repo[r]["session"] != a.session]
     if foreign:
         return _err(f"not yours to release: {', '.join(foreign)}", REFUSED)
@@ -126,7 +137,7 @@ def cmd_release(a: argparse.Namespace) -> int:
 
 
 def cmd_who(a: argparse.Namespace) -> int:
-    repo = state.claims().get(state.repo_key(), {})
+    repo = state.claims().get(state.repo_key(a.dir), {})
     for r in a.resources or sorted(repo):
         c = repo.get(r)
         print(f"{r}  {c['session']}  {c['since']}  {c['note']}".rstrip() if c else f"{r} free")
@@ -135,10 +146,16 @@ def cmd_who(a: argparse.Namespace) -> int:
 
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="ris", description=__doc__.splitlines()[0])
+    p.add_argument("-C", dest="dir", help="the repo claims refer to (default: the current directory)")
     sub = p.add_subparsers(dest="cmd", required=True)
+
+    def me(sp: argparse.ArgumentParser) -> None:
+        sp.add_argument("--as", dest="ref", required=True,
+                        help="this session's own [ref] from the ListAgents header; it keeps this session's log apart")
 
     task = sub.add_parser("task", help="render a task or a reply, list and show the log").add_subparsers(dest="sub", required=True)
     new = task.add_parser("new", help="render a task to send and log it as sent")
+    me(new)
     new.add_argument("--from", dest="sender", required=True, help="this session's name, as ListAgents shows it")
     new.add_argument("--to", required=True, help="the peer's name")
     new.add_argument("--to-ref", help="the peer's [ref] from ListAgents; it survives a /rename")
@@ -152,6 +169,7 @@ def parser() -> argparse.ArgumentParser:
 
     reply = task.add_parser("reply", help="render the reply to a received task and log it")
     reply.add_argument("id")
+    me(reply)
     reply.add_argument("--from", dest="sender", required=True)
     reply.add_argument("--status", required=True, choices=formats.STATUSES)
     reply.add_argument("--summary", required=True)
@@ -161,13 +179,16 @@ def parser() -> argparse.ArgumentParser:
 
     lst = task.add_parser("list", help="the tasks in this log")
     lst.add_argument("--open", action="store_true", help="only those without a reply")
+    me(lst)
     lst.set_defaults(func=cmd_task_list)
 
     show = task.add_parser("show", help="every event of one task")
     show.add_argument("id")
+    me(show)
     show.set_defaults(func=cmd_task_show)
 
     prs = sub.add_parser("parse", help="read a received message on stdin, print it as JSON and log it")
+    me(prs)
     prs.set_defaults(func=cmd_parse)
 
     claim = sub.add_parser("claim", help="claim branches or files of the current repo for a session")
@@ -189,4 +210,6 @@ def parser() -> argparse.ArgumentParser:
 
 def main(argv: Optional[List[str]] = None) -> int:
     args = parser().parse_args(argv)
+    if getattr(args, "ref", None) is not None and not state.REF.match(args.ref):
+        return _err(f"--as {args.ref!r}: use the [ref] ListAgents shows for this session, like 48ff1d", USAGE)
     return args.func(args)
