@@ -89,7 +89,8 @@ Lo que sigue se midió el 2026-10-17 entre dos sesiones de Claude Code en la mis
 - **Ida y vuelta completa (medida el 2026-10-17 con una sesión nueva, `prueba-ris`):** la tarea salió a las 13:30:04,
   la sesión que la recibió la leyó con `ris parse` (13:30:22) y contestó (13:30:29). Cargó la skill sola, al ver el
   bloque `ris-task`, sin que su persona se lo pidiera. Le pasó a `ris parse` el mensaje sin el envoltorio; del lado que
-  pidió, `ris parse` leyó la respuesta con el envoltorio incluido y salió 0. Cada sesión dejó su registro aparte.
+  pidió, `ris parse` leyó la respuesta con el envoltorio incluido y salió 0. Cada sesión dejó su registro aparte. El aviso de `notify_when_idle` llegó después de la respuesta, como un
+  turno nuevo, con una línea de resumen de lo que hizo la otra sesión.
 - **Según la descripción de la herramienta `SendMessage`, no medido:** una sesión en otro modo de permisos retiene el
   mensaje hasta que su persona lo aprueba; las sesiones en la nube reciben pero no pueden contestar; las de Remote
   Control offline lo reciben cuando se reconectan. Que el envío salga bien no quiere decir que alguien lo leyó.
