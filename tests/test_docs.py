@@ -41,7 +41,7 @@ class DocsTest(unittest.TestCase):
                     self.assertIn(fragment, anchors(dest), f"{page.name} links to {target}: no such heading")
 
     def test_the_task_and_reply_examples_are_what_ris_renders(self):
-        task, reply = blocks("text")
+        task, reply = blocks("text")[:2]  # the third is the terminal marks
         self.assertEqual(formats.render_task(formats.parse(task)), task)
         self.assertEqual(formats.render_reply(formats.parse(reply)), reply)
 

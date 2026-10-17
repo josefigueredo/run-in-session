@@ -41,6 +41,10 @@ La sesión que pidió lee la respuesta. Si es de una tarea suya, la cierra en su
 
 ![Terminal: ris parse lee la respuesta, ris task list la muestra done y otra sesión la rechaza](img/terminal-respuesta.png)
 
+La sesión que recibe encola con `ris task list --inbox --as <su ref>` lo que llegó mientras trabajaba (o con `when: after-current`)
+y, cuando lo atiende, enmarca lo que hace con las líneas de `ris task marks <id> --as <su ref>`: el detalle está en
+[Formatos](formatos.md#marcas-en-la-terminal).
+
 ## 5. Lo que `ris` rechaza
 
 ![Terminal: --deny sale con 3, una marca en el contexto con 2 y un reclamo ajeno con 3](img/terminal-rechazos.png)

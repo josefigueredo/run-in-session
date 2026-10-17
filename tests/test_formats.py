@@ -70,6 +70,23 @@ REPLY = Reply(id="20261017-114312-a1b2", sender="main-session", status="done", s
               evidence=["git log --oneline -1: 1a2b3c4d", "npx vitest run: 412 passed"], pending=["push is yours"])
 
 
+class WhenTest(unittest.TestCase):
+    def test_a_task_without_when_renders_no_when_line_and_reads_as_now(self):
+        text = formats.render_task(TASK)
+        self.assertNotIn("\nwhen:", text)
+        self.assertEqual(formats.parse(text).when, "now")
+
+    def test_after_current_round_trips_and_an_unknown_value_is_refused(self):
+        task = Task(id="1", sender="a", to="b", goal="g", done_when="d", when="after-current")
+        text = formats.render_task(task)
+        self.assertIn("\nwhen: after-current\n", text)
+        self.assertEqual(formats.parse(text).when, "after-current")
+        with self.assertRaises(formats.FormatError):
+            formats.render_task(Task(id="1", sender="a", to="b", goal="g", done_when="d", when="later"))
+        with self.assertRaises(formats.FormatError):
+            formats.parse(text.replace("when: after-current", "when: later"))
+
+
 class ReplyFormatTest(unittest.TestCase):
     def test_the_first_line_carries_id_status_and_summary(self):
         self.assertEqual(formats.render_reply(REPLY).splitlines()[0],

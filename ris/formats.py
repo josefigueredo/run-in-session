@@ -13,6 +13,7 @@ from typing import List, Union
 
 VERSION = 1
 STATUSES = ("done", "partial", "declined", "failed")
+WHENS = ("now", "after-current")  # after-current: the peer finishes what it is doing before it takes this task
 
 _OPEN = re.compile(r"^--- ris-(task|reply) v(\d+) ---$", re.M)
 _MARKER = re.compile(r"^--- (end )?ris-(task|reply)( v\d+)? ---$", re.M)
@@ -37,6 +38,7 @@ class Task:
     touches: List[str] = field(default_factory=list)
     forbidden: List[str] = field(default_factory=list)
     context: str = ""
+    when: str = "now"
 
 
 @dataclass
@@ -85,8 +87,12 @@ def render_task(task: Task) -> str:
         f"done-when: {_line('done-when', task.done_when)}",
         f"touches: {'; '.join(_items('touches', task.touches, inline=True))}",
         f"forbidden: {'; '.join(_items('forbidden', task.forbidden, inline=True))}",
-        "--- context ---",
     ]
+    if task.when not in WHENS:
+        raise FormatError(f"when must be one of {', '.join(WHENS)}")
+    if task.when != "now":  # optional: a v1 parser that predates it ignores the line and reads the task as now
+        lines.append(f"when: {task.when}")
+    lines.append("--- context ---")
     if _MARKER.search(task.context):
         raise FormatError("context has a ris marker line, which would cut the message; quote it differently")
     if task.context.strip():
@@ -157,7 +163,10 @@ def _parse_task(lines: List[str]) -> Task:
     cut = lines.index("--- context ---")
     fields = _fields(lines[:cut], "task")
     _require(fields, ["id", "from", "to", "goal", "done-when"], "task")
-    return Task(id=fields["id"], sender=fields["from"], to=fields["to"], goal=fields["goal"],
+    when = fields.get("when") or "now"
+    if when not in WHENS:
+        raise FormatError(f"ris-task: when {when!r} is not one of {', '.join(WHENS)}")
+    return Task(when=when, id=fields["id"], sender=fields["from"], to=fields["to"], goal=fields["goal"],
                 done_when=fields["done-when"], touches=_split(fields.get("touches", "")),
                 forbidden=_split(fields.get("forbidden", "")), context="\n".join(lines[cut + 1:]).strip("\n"))
 

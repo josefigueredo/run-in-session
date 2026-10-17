@@ -49,6 +49,7 @@ Si aparece un conflicto en chat.service.ts, quedate con la versión de fix/20.
 | `done-when` | sí | Cuándo la tarea cuenta como terminada. Sirve para que la respuesta diga `done` o `partial` sin discutir |
 | `touches` | no | Ramas o archivos que la tarea puede cambiar, separados por `; ` (por eso un ítem no puede tener `;`) |
 | `forbidden` | no | Lo que no tiene que hacer, separado por `; ` |
+| `when` | no | `after-current`: la sesión que recibe termina primero lo que está haciendo y recién después toma la tarea. Sin el campo vale `now`, y `ris task new` no escribe la línea. Un `ris` anterior a este campo ignora la línea y lee la tarea como `now`. Otro valor sale con 4 |
 | `--- context ---` | sí, puede quedar vacío | Texto libre, varias líneas, hasta `--- end ris-task ---`. No puede tener una línea que parezca una marca (`--- ris-task v1 ---`, `--- end ris-reply ---`…), porque cortaría el mensaje: `ris task new` sale con 2 |
 
 ## Respuesta
@@ -122,12 +123,27 @@ entre sesiones locales nunca daría el código 6. Se usa la referencia y no el n
 | `event` | Lo escribe | Campos además de `ts`, `id` y `peer` |
 |---|---|---|
 | `sent` | `ris task new` | `peer_ref`, `goal` |
-| `received` | `ris parse` de una tarea | `goal` |
+| `received` | `ris parse` de una tarea | `goal`, `when` |
 | `replied` | `ris task reply` | `status`; `peer` sale de la tarea recibida, vacío si no está en el registro |
 | `reply-received` | `ris parse` de una respuesta a una tarea propia | `status` |
 
 `ris task list --as <ref>` arma una fila por tarea de esa sesión: está `open` hasta que hay una respuesta, y después
-muestra su `status`.
+muestra su `status`. Con `--inbox`, solo las que recibió y todavía no contestó, con su `when`: es la cola que la sesión
+atiende cuando termina lo que estaba haciendo.
+
+## Marcas en la terminal
+
+Cuando una sesión trabaja para otra, lo que escribe en su terminal va entre dos líneas fijas, para que la persona que
+mira esa terminal no lo confunda con lo suyo. `ris task marks <id> --as <ref>` las imprime, junto con el resumen del
+envío de la respuesta:
+
+```text
+── ris 82c2 · tarea de bugs ──
+── fin ris 82c2 · vuelvo a lo tuyo ──
+ris reply 82c2 → bugs
+```
+
+Son una regla de la skill, no algo que imponga Claude Code.
 
 ## Reclamos
 
@@ -156,7 +172,7 @@ Los reclamos son de este usuario en esta máquina. Una sesión en otra máquina 
 | 3 | Rechazado: el mensaje coincide con un `--deny`, o la rama o el archivo los tiene otra sesión |
 | 4 | El texto no trae un mensaje válido: no tiene marca, le falta un campo o el bloque está cortado |
 | 5 | La marca es de una versión que este `ris` no lee |
-| 6 | Un `id` que no está en el registro de esa sesión: una respuesta a una tarea que no mandó, o `ris task show` de un id desconocido |
+| 6 | Un `id` que no está en el registro de esa sesión: una respuesta a una tarea que no mandó, `ris task show` de un id desconocido, o `ris task marks` de una tarea que no recibió |
 
 ## Versiones
 

@@ -63,7 +63,8 @@ def tasks(ref: str) -> List[dict]:
     for e in events(ref):
         if e["event"] in ("sent", "received"):
             rows.setdefault(e["id"], {"id": e["id"], "way": e["event"], "peer": e["peer"], "peer_ref": e.get("peer_ref", ""),
-                                      "goal": e.get("goal", ""), "status": "open"})
+                                      "goal": e.get("goal", ""), "status": "open",
+                                      "when": e.get("when", "now")})
         elif e["event"] in ("replied", "reply-received") and e["id"] in rows:
             rows[e["id"]]["status"] = e["status"]
     return list(rows.values())

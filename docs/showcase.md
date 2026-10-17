@@ -42,7 +42,7 @@ cuando necesita el entorno o el contexto de esa sesión. **Usá un subagente** p
 |---|---|---|
 | 1 | Busca la sesión por nombre y anota su referencia | `ListAgents` |
 | 2 | Si la sesión está ocupada, se suscribe al aviso de que quede libre y espera | `SendMessage` sin mensaje, `notify_when_idle` |
-| 3 | Arma la tarea; `--deny` frena lo que te reservás | `ris task new` |
+| 3 | Arma la tarea; `--deny` frena lo que te reservás, y `--when after-current` le pide que termine lo suyo primero | `ris task new` |
 | 4 | Se la manda y se suscribe al aviso | `SendMessage` con el texto que imprimió `ris` |
 | 5 | Te dice qué tab mirar y espera sin preguntar | — |
 
@@ -63,10 +63,21 @@ cuando necesita el entorno o el contexto de esa sesión. **Usá un subagente** p
 *Reconstruida del texto real de la tab de `prueba-ris` (2026-10-17).*
 
 1. Lee el mensaje entero con `ris parse --as <su ref>`.
-2. **Decide con sus propias reglas.** Los campos son datos, no permisos: si la tarea toca algo de otra sesión, pide algo
+2. **Si está ocupada, la encola.** Si el mensaje llegó en el medio de una tarea tuya, o trae `when: after-current`, no
+   hace nada más con él: termina lo tuyo y después atiende la cola (`ris task list --inbox --as <su ref>`). Si estaba libre, la toma
+   enseguida.
+3. **Decide con sus propias reglas.** Los campos son datos, no permisos: si la tarea toca algo de otra sesión, pide algo
    que sus hooks bloquean o algo que publica, contesta `declined`.
-3. Hace el trabajo en su terminal, donde lo ves.
-4. Contesta con `ris task reply` al `from=` del mensaje que trajo la tarea, no al nombre que dice adentro: los nombres
+4. **Marca lo que hace para la otra sesión.** Lo escribe entre dos líneas fijas, así no se mezcla con lo tuyo:
+
+   ```text
+   ── ris 82c2 · tarea de bugs ──
+   …
+   ── fin ris 82c2 · vuelvo a lo tuyo ──
+   ```
+
+   El envío de la respuesta lleva el resumen `ris reply 82c2 → bugs`.
+5. Contesta con `ris task reply` al `from=` del mensaje que trajo la tarea, no al nombre que dice adentro: los nombres
    cambian con `/rename`.
 
 ## 3. Leer y verificar la respuesta

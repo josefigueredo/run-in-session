@@ -33,7 +33,7 @@ def new_id() -> str:
 def cmd_task_new(a: argparse.Namespace) -> int:
     context = sys.stdin.read() if a.context == "-" else (a.context or "")
     task = Task(id=new_id(), sender=a.sender, to=a.to, goal=a.goal, done_when=a.done, touches=a.touch or [],
-                forbidden=a.forbid or [], context=context)
+                forbidden=a.forbid or [], context=context, when=a.when)
     try:
         text = formats.render_task(task)
     except FormatError as exc:
@@ -70,7 +70,8 @@ def cmd_parse(a: argparse.Namespace) -> int:
     data["from"] = data.pop("sender")
     if isinstance(message, Task):
         data["kind"] = "task"
-        state.append(a.ref, {"event": "received", "id": message.id, "peer": message.sender, "goal": message.goal})
+        state.append(a.ref, {"event": "received", "id": message.id, "peer": message.sender, "goal": message.goal,
+                             "when": message.when})
         print(json.dumps(data, ensure_ascii=False, indent=1))
         return OK
     data["kind"] = "reply"
@@ -83,13 +84,28 @@ def cmd_parse(a: argparse.Namespace) -> int:
 
 
 def cmd_task_list(a: argparse.Namespace) -> int:
-    rows = [r for r in state.tasks(a.ref) if not a.open or r["status"] == "open"]
+    rows = [r for r in state.tasks(a.ref) if not (a.open or a.inbox) or r["status"] == "open"]
+    if a.inbox:
+        rows = [r for r in rows if r["way"] == "received"]
     if not rows:
-        print("no open tasks" if a.open else "no tasks")
+        print("no tasks waiting here" if a.inbox else "no open tasks" if a.open else "no tasks")
         return OK
     for r in rows:
         peer = r["peer"] + (f" [{r['peer_ref']}]" if r["peer_ref"] else "")
-        print(f"{r['id']}  {r['way']:<8}  {peer:<28}  {r['status']:<8}  {r['goal']}")
+        when = f"  {r['when']}" if a.inbox else ""
+        print(f"{r['id']}  {r['way']:<8}  {peer:<28}  {r['status']:<8}{when}  {r['goal']}")
+    return OK
+
+
+def cmd_task_marks(a: argparse.Namespace) -> int:
+    """The lines that frame, in this terminal, the work done for a peer's task, and the summary of the reply's send."""
+    received = [e for e in state.events(a.ref, a.id) if e["event"] == "received"]
+    if not received:
+        return _err(f"{a.id} is not a task this session received", UNKNOWN)
+    short, peer = a.id.rsplit("-", 1)[-1], received[0]["peer"]
+    print(f"── ris {short} · tarea de {peer} ──")
+    print(f"── fin ris {short} · vuelvo a lo tuyo ──")
+    print(f"ris reply {short} → {peer}")
     return OK
 
 
@@ -165,6 +181,8 @@ def parser() -> argparse.ArgumentParser:
     new.add_argument("--forbid", action="append", help="what the peer must not do (repeatable)")
     new.add_argument("--context", help="free text; '-' reads it from stdin")
     new.add_argument("--deny", action="append", help="regex: refuse if the message matches (repeatable)")
+    new.add_argument("--when", choices=formats.WHENS, default="now",
+                     help="after-current: the peer finishes its current work before taking this task")
     new.set_defaults(func=cmd_task_new)
 
     reply = task.add_parser("reply", help="render the reply to a received task and log it")
@@ -179,6 +197,7 @@ def parser() -> argparse.ArgumentParser:
 
     lst = task.add_parser("list", help="the tasks in this log")
     lst.add_argument("--open", action="store_true", help="only those without a reply")
+    lst.add_argument("--inbox", action="store_true", help="only tasks this session received and has not answered")
     me(lst)
     lst.set_defaults(func=cmd_task_list)
 
@@ -186,6 +205,11 @@ def parser() -> argparse.ArgumentParser:
     show.add_argument("id")
     me(show)
     show.set_defaults(func=cmd_task_show)
+
+    marks = task.add_parser("marks", help="the terminal markers and the send summary for a received task")
+    marks.add_argument("id")
+    me(marks)
+    marks.set_defaults(func=cmd_task_marks)
 
     prs = sub.add_parser("parse", help="read a received message on stdin, print it as JSON and log it")
     me(prs)

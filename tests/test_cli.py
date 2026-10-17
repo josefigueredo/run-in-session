@@ -132,6 +132,36 @@ class ListTest(unittest.TestCase):
         self.assertEqual(run_cli(["task", "show", "nope", "--as", ME], home).returncode, 6)
 
 
+class InboxTest(unittest.TestCase):
+    def test_inbox_lists_received_tasks_without_a_reply_and_says_when(self):
+        home = make_dir()
+        later = run_cli(NEW + ["--when", "after-current"], home).stdout
+        now = run_cli(NEW, home).stdout
+        self.assertIn("when: after-current", later)
+        for text in (later, now):
+            run_cli(["parse", "--as", PEER], home, stdin=text)
+        run_cli(["task", "reply", task_id_of(now), "--as", PEER, "--from", "main-session", "--status", "done",
+                 "--summary", "ok"], home)
+        out = run_cli(["task", "list", "--inbox", "--as", PEER], home)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        [row] = out.stdout.strip().splitlines()
+        self.assertIn(task_id_of(later), row)
+        self.assertIn("after-current", row)
+        self.assertEqual(run_cli(["task", "list", "--inbox", "--as", ME], home).stdout.strip(), "no tasks waiting here")
+
+    def test_marks_print_the_terminal_markers_and_the_send_summary(self):
+        home = make_dir()
+        text = run_cli(NEW, home).stdout
+        task_id = task_id_of(text)
+        run_cli(["parse", "--as", PEER], home, stdin=text)
+        out = run_cli(["task", "marks", task_id, "--as", PEER], home)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        short = task_id.rsplit("-", 1)[-1]
+        self.assertEqual(out.stdout.splitlines(), [f"── ris {short} · tarea de bugs ──",
+                                                   f"── fin ris {short} · vuelvo a lo tuyo ──",
+                                                   f"ris reply {short} → bugs"])
+
+
 class ClaimTest(unittest.TestCase):
     def setUp(self):
         self.home, self.repo = make_dir(), make_dir()

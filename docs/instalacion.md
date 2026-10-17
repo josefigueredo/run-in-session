@@ -69,6 +69,7 @@ Si otra sesión ya la tiene, el agente no la pisa y te dice cuál. Para soltarla
 | El agente no encuentra la sesión | Mirá el nombre con *«¿Qué sesiones ves?»*: si la renombraste hace un momento, puede tardar en aparecer el nombre nuevo |
 | La otra sesión no carga la skill | Cerrala y abrila de nuevo |
 | El mensaje queda esperando en la otra tab | Según la descripción de `SendMessage` (no medido), una sesión en otro modo de permisos retiene los mensajes de otras sesiones hasta que los aprobás en su tab |
+| Lo que hace para otra sesión se mezcla con lo tuyo | Lo que es para otra sesión va entre `── ris xxxx · tarea de … ──` y `── fin ris xxxx · vuelvo a lo tuyo ──`. Si llegó mientras trabajaba con vos, la sesión tendría que haberla dejado para después; pedile que termine lo tuyo primero. Del lado del que manda: *«mandásela para cuando termine»* (`--when after-current`) |
 | La otra sesión contesta `declined` | La tarea le pedía algo que sus permisos no dejan o que es tuyo (push, PR, Jira): hacelo vos |
 | *«no está en el registro de esta sesión»* | Llegó una respuesta a una tarea que esta sesión no mandó: el agente no actúa sobre ella |
 
