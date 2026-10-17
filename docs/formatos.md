@@ -8,8 +8,11 @@ mensajes los arma `ris` y los manda el agente con su herramienta `SendMessage`. 
 - **La primera línea se entiende sola.** Quien recibe ve solo esa línea, cortada, hasta que despliega el mensaje
   (ctrl+o). Medido el 2026-10-17: la tab mostró
   `Message from @bugs: ris task 20261017-133004-f64f from bugs: Prueba de ida y vuelta de run-in-session: leer este mensaje con ris parse y co… (ctrl+o to expand)`.
-  Por eso dice quién pide qué, o qué pasó con la tarea, y conviene que `goal` y `summary` digan lo importante al
-  principio. Dónde se corta depende, probablemente, del ancho de la terminal (no medido).
+  Ese formato viejo gastaba 20 caracteres en el id completo. Desde entonces la línea es
+  `ris task from <quien pide>: <goal> [xxxx]` o `ris reply from <quien contesta> (<status>): <summary> [xxxx]`: primero
+  quién y qué, y al final solo la cola del id (los 4 hexadecimales), que alcanza para que una persona empareje la
+  respuesta con su tarea. El id completo va en el bloque, y es el que lee `ris`. Igual conviene que `goal` y `summary`
+  digan lo importante al principio. Dónde se corta depende, probablemente, del ancho de la terminal (no medido).
 - **Los campos van en un bloque con marca de versión.** La tarea va entre `--- ris-task v1 ---` y
   `--- end ris-task ---`, y la respuesta entre `--- ris-reply v1 ---` y `--- end ris-reply ---`. `ris parse` busca el
   bloque en cualquier parte del texto, porque el canal envuelve el mensaje con sus propias líneas (ver
@@ -22,7 +25,7 @@ mensajes los arma `ris` y los manda el agente con su herramienta `SendMessage`. 
 ## Tarea
 
 ```text
-ris task 20261017-114927-46d7 from bugs: Rebasear feat/mcp-integration sobre fix/20-migracion-0018
+ris task from bugs: Rebasear feat/mcp-integration sobre fix/20-migracion-0018 [46d7]
 --- ris-task v1 ---
 id: 20261017-114927-46d7
 from: bugs
@@ -51,7 +54,7 @@ Si aparece un conflicto en chat.service.ts, quedate con la versión de fix/20.
 ## Respuesta
 
 ```text
-ris reply 20261017-114927-46d7 from main-session (done): Rebaseada sobre fix/20, sin conflictos
+ris reply from main-session (done): Rebaseada sobre fix/20, sin conflictos [46d7]
 --- ris-reply v1 ---
 id: 20261017-114927-46d7
 from: main-session

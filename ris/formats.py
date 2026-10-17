@@ -1,7 +1,8 @@
 """The two messages sessions exchange: a task and its reply.
 
 Both are plain text that a person can read in the receiving terminal. The first line stands alone (the recipient sees
-only that line until it expands the message); a versioned marker block carries the fields. The block may sit anywhere in
+only that line, cut to the terminal width, until it expands the message), so it leads with the sender and the goal and
+ends with the id's short tail; a versioned marker block carries the fields. The block may sit anywhere in
 the text: the channel wraps the message in its own lines. docs/formatos.md is the reference.
 """
 from __future__ import annotations
@@ -66,10 +67,16 @@ def _items(name: str, values: List[str], inline: bool) -> List[str]:
     return out
 
 
+def _short(task_id: str) -> str:
+    """The id's random tail: enough for a person to match a reply to its task, short enough not to push the goal past
+    the preview cut."""
+    return _line("id", task_id).rsplit("-", 1)[-1]
+
+
 def render_task(task: Task) -> str:
     goal = _line("goal", task.goal)
     lines = [
-        f"ris task {_line('id', task.id)} from {_line('from', task.sender)}: {goal}",
+        f"ris task from {_line('from', task.sender)}: {goal} [{_short(task.id)}]",
         f"--- ris-task v{VERSION} ---",
         f"id: {task.id}",
         f"from: {task.sender}",
@@ -93,7 +100,7 @@ def render_reply(reply: Reply) -> str:
         raise FormatError(f"status must be one of {', '.join(STATUSES)}")
     summary = _line("summary", reply.summary)
     lines = [
-        f"ris reply {_line('id', reply.id)} from {_line('from', reply.sender)} ({reply.status}): {summary}",
+        f"ris reply from {_line('from', reply.sender)} ({reply.status}): {summary} [{_short(reply.id)}]",
         f"--- ris-reply v{VERSION} ---",
         f"id: {reply.id}",
         f"from: {reply.sender}",

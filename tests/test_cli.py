@@ -19,6 +19,10 @@ def log(home, ref: str = ME) -> list:
     return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
 
 
+def task_id_of(text: str) -> str:
+    return re.search(r"^id: (\S+)$", text, re.M).group(1)
+
+
 def reply_text(home, task_id: str, ref: str = PEER) -> str:
     return run_cli(["task", "reply", task_id, "--as", ref, "--from", "main-session", "--status", "done",
                     "--summary", "Rebased", "--evidence", "git log -1: abc"], home).stdout
@@ -29,7 +33,7 @@ class TaskNewTest(unittest.TestCase):
         home = make_dir()
         out = run_cli(NEW + ["--context", "fix/20 is pushed"], home)
         self.assertEqual(out.returncode, 0, out.stderr)
-        self.assertRegex(out.stdout.splitlines()[0], r"^ris task \d{8}-\d{6}-[0-9a-f]{4} from bugs: Rebase")
+        self.assertRegex(out.stdout.splitlines()[0], r"^ris task from bugs: Rebase.* \[[0-9a-f]{4}\]$")
         self.assertIn("fix/20 is pushed", out.stdout)
         [entry] = log(home)
         self.assertEqual((entry["event"], entry["peer"], entry["peer_ref"]), ("sent", "main-session", PEER))
@@ -78,7 +82,7 @@ class ParseTest(unittest.TestCase):
     def test_two_sessions_sharing_one_home_keep_separate_logs(self):
         home = make_dir()  # the normal case: same user, same machine, same ~/.run-in-session
         task = run_cli(NEW, home).stdout
-        task_id = task.split()[2]
+        task_id = task_id_of(task)
         self.assertEqual(run_cli(["parse", "--as", PEER], home, stdin=task).returncode, 0)
         reply = reply_text(home, task_id)
         self.assertRegex(run_cli(["task", "list", "--open", "--as", ME], home).stdout, r"sent\s+main-session \[248292\]\s+open")
@@ -89,7 +93,7 @@ class ParseTest(unittest.TestCase):
 
     def test_a_reply_to_a_task_another_local_session_sent_is_flagged(self):
         home = make_dir()
-        task_id = run_cli(NEW, home).stdout.split()[2]  # sent by ME
+        task_id = task_id_of(run_cli(NEW, home).stdout)  # sent by ME
         out = run_cli(["parse", "--as", "c0ffee"], home, stdin=reply_text(home, task_id))
         self.assertEqual(out.returncode, 6)
         self.assertIn("not in this session's log", out.stderr)
@@ -111,7 +115,7 @@ class ListTest(unittest.TestCase):
 
     def test_show_prints_every_event_of_a_task(self):
         home = make_dir()
-        task_id = run_cli(NEW, home).stdout.split()[2]
+        task_id = task_id_of(run_cli(NEW, home).stdout)
         out = run_cli(["task", "show", task_id, "--as", ME], home)
         self.assertEqual(out.returncode, 0)
         self.assertEqual(json.loads(out.stdout)[0]["event"], "sent")

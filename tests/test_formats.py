@@ -15,7 +15,7 @@ TASK = Task(id="20261017-114312-a1b2", sender="bugs", to="main-session", goal="R
 class TaskFormatTest(unittest.TestCase):
     def test_the_first_line_says_who_asks_what_on_its_own(self):
         first = formats.render_task(TASK).splitlines()[0]
-        self.assertEqual(first, "ris task 20261017-114312-a1b2 from bugs: Rebase feat/mcp-integration on fix/20")
+        self.assertEqual(first, "ris task from bugs: Rebase feat/mcp-integration on fix/20 [a1b2]")
 
     def test_a_rendered_task_parses_back_to_the_same_task(self):
         self.assertEqual(formats.parse(formats.render_task(TASK)), TASK)
@@ -73,7 +73,7 @@ REPLY = Reply(id="20261017-114312-a1b2", sender="main-session", status="done", s
 class ReplyFormatTest(unittest.TestCase):
     def test_the_first_line_carries_id_status_and_summary(self):
         self.assertEqual(formats.render_reply(REPLY).splitlines()[0],
-                         "ris reply 20261017-114312-a1b2 from main-session (done): Rebased, 0 conflicts")
+                         "ris reply from main-session (done): Rebased, 0 conflicts [a1b2]")
 
     def test_a_rendered_reply_parses_back(self):
         self.assertEqual(formats.parse(formats.render_reply(REPLY)), REPLY)
