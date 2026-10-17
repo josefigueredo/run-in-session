@@ -66,8 +66,8 @@ La tabla completa está en [Formatos](formatos.md#códigos-de-salida).
 
 | Síntoma | Causa |
 |---|---|
-| `ris: --as '…': use the [ref] ListAgents shows` (código 2) | Le pasaste el nombre y no la referencia, o nada |
-| `ris task list` no muestra una tarea que mandaste | La mandaste con otro `--as`: cada sesión tiene su registro |
+| `ris: --as '…': use the [ref] ListAgents shows` (código 2) | `--as` tiene caracteres que no son letras, números, `-` o `_` |
+| `ris task list` no muestra una tarea que mandaste | La mandaste con otro `--as`: cada sesión tiene su registro. Pasa también si le diste el nombre de la sesión en vez de su referencia: `--as bugs` sale con 0 y abre otro registro, `sessions/bugs/` (medido el 2026-10-17) |
 | `who` no muestra un reclamo | Lo hiciste en otro repo: pasá `-C <repo>` siempre |
 
 ## De dónde sale cada captura

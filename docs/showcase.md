@@ -52,7 +52,7 @@ cuando necesita el entorno o el contexto de esa sesión. **Usá un subagente** p
 |---|---|
 | Ninguna sesión coincide con el nombre, o más de una | El agente te pregunta; no adivina |
 | El texto pide algo que te reservás (push, publicar) | `ris task new` sale con 3 y no se anota nada: el agente reescribe la tarea, no la fuerza |
-| La sesión está en otro modo de permisos | El mensaje espera en su tab hasta que lo apruebes |
+| La sesión está en otro modo de permisos | Según la descripción de `SendMessage` (no medido), el mensaje espera en su tab hasta que lo apruebes |
 
 ## 2. Recibir una tarea
 

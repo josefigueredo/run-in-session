@@ -10,8 +10,8 @@ Decile al agente:
 > *«Instalá la skill run-in-session desde ~/CurrentCode/SPECKIT/Harness/run-in-session»*
 
 Corre `./install.sh`, que enlaza la skill en `~/.agents/skills` y `~/.claude/skills`. No toca ningún repo ni ninguna
-otra configuración. Las sesiones que ya estaban abiertas la ven recién en su próxima conversación: si una sesión no la
-encuentra, cerrala y abrila de nuevo.
+otra configuración. Una sesión abierta vio una skill recién instalada sin reiniciarse (medido el 2026-10-17 con
+harness-docs); si alguna no la encuentra, cerrala y abrila de nuevo.
 
 ## 2. Darle un nombre a cada sesión
 
@@ -67,8 +67,8 @@ Si otra sesión ya la tiene, el agente no la pisa y te dice cuál. Para soltarla
 | Situación | Qué hacer |
 |---|---|
 | El agente no encuentra la sesión | Mirá el nombre con *«¿Qué sesiones ves?»*: si la renombraste hace un momento, puede tardar en aparecer el nombre nuevo |
-| La otra sesión no carga la skill | Abrió antes de la instalación: cerrala y abrila de nuevo |
-| El mensaje queda esperando en la otra tab | Esa sesión está en otro modo de permisos y retiene los mensajes de otras sesiones: aprobalo vos en su tab |
+| La otra sesión no carga la skill | Cerrala y abrila de nuevo |
+| El mensaje queda esperando en la otra tab | Según la descripción de `SendMessage` (no medido), una sesión en otro modo de permisos retiene los mensajes de otras sesiones hasta que los aprobás en su tab |
 | La otra sesión contesta `declined` | La tarea le pedía algo que sus permisos no dejan o que es tuyo (push, PR, Jira): hacelo vos |
 | *«no está en el registro de esta sesión»* | Llegó una respuesta a una tarea que esta sesión no mandó: el agente no actúa sobre ella |
 
