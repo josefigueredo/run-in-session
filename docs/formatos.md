@@ -49,7 +49,7 @@ Si aparece un conflicto en chat.service.ts, quedate con la versión de fix/20.
 | `done-when` | sí | Cuándo la tarea cuenta como terminada. Sirve para que la respuesta diga `done` o `partial` sin discutir |
 | `touches` | no | Ramas o archivos que la tarea puede cambiar, separados por `; ` (por eso un ítem no puede tener `;`) |
 | `forbidden` | no | Lo que no tiene que hacer, separado por `; ` |
-| `when` | no | `after-current`: la sesión que recibe termina primero lo que está haciendo y recién después toma la tarea. Sin el campo vale `now`, y `ris task new` no escribe la línea. Un `ris` anterior a este campo ignora la línea y lee la tarea como `now`. Otro valor sale con 4 |
+| `when` | no | `after-current`: si la sesión que recibe está en el medio de un trabajo, lo termina antes de tomar la tarea; si está libre, la toma enseguida. Sin el campo vale `now`, y `ris task new` no escribe la línea. Un `ris` anterior a este campo ignora la línea y lee la tarea como `now`. Otro valor sale con 4 |
 | `--- context ---` | sí, puede quedar vacío | Texto libre, varias líneas, hasta `--- end ris-task ---`. No puede tener una línea que parezca una marca (`--- ris-task v1 ---`, `--- end ris-reply ---`…), porque cortaría el mensaje: `ris task new` sale con 2 |
 
 ## Respuesta
