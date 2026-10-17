@@ -104,8 +104,12 @@ Lo que sigue se midió el 2026-10-17 entre dos sesiones de Claude Code en la mis
   comando de 61 s) se mandó con la sesión libre; la B, con `when: after-current`, mientras corría A. El registro de la
   sesión que recibe muestra el orden: recibe A (14:55:42), termina el comando de A (14:56:46), registra B y contesta A
   en el mismo segundo (14:56:53), y recién después contesta B (14:57:08). B le llegó en la primera pausa del trabajo y
-  no lo cortó. El aviso de que quedó libre trajo como resumen su última línea, `── fin ris 6888 · vuelvo a lo tuyo ──`:
-  cerró B con la marca.
+  no lo cortó. En su tab, cada tarea quedó entre sus dos marcas y cada envío se vio como `"ris reply 1052 → bugs"`. El
+  aviso de llegada de B (`› Message from @bugs: … [6888]`) lo escribe Claude Code donde cae, adentro del marco de A, y no
+  se puede mover. Después de cerrar el marco, la sesión escribió un resumen largo de las dos tareas y supuso, sin razón,
+  que su respuesta esperaba una aprobación: por eso la skill pide a lo sumo una línea después del cierre y ninguna
+  suposición sobre la otra sesión. El aviso de que quedó libre trajo como resumen su última línea,
+  `── fin ris 6888 · vuelvo a lo tuyo ──`.
 - **Según la descripción de la herramienta `SendMessage`, no medido:** una sesión en otro modo de permisos retiene el
   mensaje hasta que su persona lo aprueba; las sesiones en la nube reciben pero no pueden contestar; las de Remote
   Control offline lo reciben cuando se reconectan. Que el envío salga bien no quiere decir que alguien lo leyó.

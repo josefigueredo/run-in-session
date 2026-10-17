@@ -58,7 +58,9 @@ The person watching this terminal is working with you; a peer's task must not ge
    peer what that peer could not do itself.
 4. **Frame it.** `ris task marks <id> --as <my ref>` prints three lines. Write the first before anything you do or say
    for that task and the second after it, so the person can tell the peer's work from theirs. Do the work here, in this
-   terminal, as you would for the user.
+   terminal, as you would for the user. Everything about the task, its results included, goes inside the frame; after
+   the closing line, at most one line for the person (`Atendí ris 1052 y 6888 de bugs.`), and no guesses about the
+   peer's side (whether it read the reply, whether it needs an approval).
 5. **Reply to the transport, not to the envelope.** `ris task reply <id> --as <my ref> --from <me> --status done|partial|declined|failed
    --summary "<one line>" [--evidence "<commit, command and its result>"]... [--pending "<what is left, for whom>"]...`
    and send the printed text with `SendMessage` to the `from=` of the message that brought the task (copy that
