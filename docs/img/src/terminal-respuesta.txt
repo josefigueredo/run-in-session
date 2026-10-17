@@ -1,0 +1,5 @@
+# bugs lee la respuesta: es de una tarea suya, así que la cierra en su registro
+$ python3 ~/.agents/skills/run-in-session/ris.py parse --as 48ff1d < respuesta.txt | head -4
+$ python3 ~/.agents/skills/run-in-session/ris.py task list --as 48ff1d
+# otra sesión que nunca mandó esa tarea la rechaza
+$ python3 ~/.agents/skills/run-in-session/ris.py parse --as be7e85 < respuesta.txt > /dev/null

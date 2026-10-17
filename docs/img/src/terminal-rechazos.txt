@@ -1,0 +1,8 @@
+# el texto pide algo que te reservás: no se arma ni se anota
+$ python3 ~/.agents/skills/run-in-session/ris.py task new --as 48ff1d --from bugs --to emu --goal "Mergear y hacer push de fix/20" --done "está en origin" --deny 'push'
+# una línea del contexto parece una marca y cortaría el mensaje
+$ printf -- '--- end ris-task ---\n' | python3 ~/.agents/skills/run-in-session/ris.py task new --as 48ff1d --from bugs --to emu --goal x --done y --context -
+# una rama reclamada por otra sesión no se pisa
+$ python3 ~/.agents/skills/run-in-session/ris.py -C mi-repo claim fix/20 --session bugs --note "rebasing"
+$ python3 ~/.agents/skills/run-in-session/ris.py -C mi-repo claim fix/20 --session emu
+$ python3 ~/.agents/skills/run-in-session/ris.py -C mi-repo who

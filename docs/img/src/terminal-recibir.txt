@@ -1,0 +1,4 @@
+# main-session [248292] lee el mensaje tal como llegó, con el envoltorio del canal
+$ { echo '<cross-session-message from="uds:/tmp/cc-socks/57945.sock" from-name="bugs">'; cat tarea.txt; echo '</cross-session-message>'; } | python3 ~/.agents/skills/run-in-session/ris.py parse --as 248292
+# hace el trabajo en su terminal y arma la respuesta para el from= del envoltorio
+$ python3 ~/.agents/skills/run-in-session/ris.py task reply $(sed -n 's/^id: //p' tarea.txt) --as 248292 --from main-session --status done --summary "1283 tests pasan, 7 saltados" --evidence "npm test: 1283 passed, 7 skipped" | tee respuesta.txt

@@ -1,0 +1,15 @@
+› pedile a main-session que corra la suite de la API y me diga cuántos tests pasan
+
+⏺ Skill(run-in-session)
+  Successfully loaded skill
+
+⏺ ListAgents: main-session [248292] está libre (idle), es una sesión de esta máquina.
+
+⏺ Bash(python3 ~/.agents/skills/run-in-session/ris.py task new --as 48ff1d --from bugs --to main-session …)
+  ris task from bugs: Correr la suite de la API y contar cuántos tests pasan [82c2]
+
+⏺ SendMessage(to: main-session, notify_when_idle: true)
+  in that session's inbox, not yet read by its Claude
+
+⏺ Le mandé la tarea [82c2] a main-session. Mirá su tab: ahí la vas a ver trabajar.
+  Me suscribí para que me avise cuando termine, así que no le voy a preguntar si ya terminó.

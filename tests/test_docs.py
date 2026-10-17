@@ -11,7 +11,7 @@ from ris import cli, formats
 
 DOCS = ROOT / "docs"
 FORMATOS = (DOCS / "formatos.md").read_text(encoding="utf-8")
-PAGES = [ROOT / "README.md", DOCS / "formatos.md"]
+PAGES = [ROOT / "README.md", *sorted(DOCS.glob("*.md"))]
 
 
 def slug(heading: str) -> str:
@@ -60,7 +60,7 @@ class DocsTest(unittest.TestCase):
         # task list, task show, task reply and parse read or write one session's log: without --as they exit 2.
         # A runnable command is a python3 line or one with flags; a bare `ris parse` in prose is just the name.
         command = re.compile(r"^python3 .*|ris(?:\.py)? (?:task (?:list|show|reply)|parse)\b[^`\n]*--[^`\n]*", re.M)
-        for path in (ROOT / "README.md", ROOT / "SKILL.md", DOCS / "formatos.md"):
+        for path in (ROOT / "SKILL.md", *PAGES):
             for cmd in command.findall(path.read_text("utf-8")):
                 if re.search(r"ris(?:\.py)? (?:task (?:list|show|reply)|parse)\b", cmd):
                     self.assertIn("--as", cmd, f"{path.name}: {cmd}")

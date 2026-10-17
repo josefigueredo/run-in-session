@@ -1,0 +1,2 @@
+# bugs [48ff1d] arma una tarea para main-session [248292]; ris la imprime y la anota en su registro
+$ python3 ~/.agents/skills/run-in-session/ris.py task new --as 48ff1d --from bugs --to main-session --to-ref 248292 --goal "Correr la suite de la API y contar cuántos tests pasan" --done "la respuesta trae el comando y su resultado" --forbid push --forbid "editar archivos" --context "Es solo lectura." | tee tarea.txt

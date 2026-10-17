@@ -1,0 +1,35 @@
+<!doctype html><meta charset="utf-8"><style>*{box-sizing:border-box}body{margin:0;background:#cfd3e6;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif}
+.win{margin:22px;border-radius:12px;overflow:hidden;box-shadow:0 18px 50px rgba(20,20,40,.35),0 0 0 1px rgba(0,0,0,.25)}
+.bar{height:38px;background:#2b2b31;display:flex;align-items:center;padding:0 14px;position:relative}
+.dots span{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px}
+.dots .r{background:#ff5f57}.dots .y{background:#febc2e}.dots .g{background:#28c840}
+.ttl{position:absolute;left:0;right:0;text-align:center;color:#a9a9b3;font-size:13px}
+.term{background:#16161a;color:#e6e6ea;font:13.5px/1.5 Menlo,Monaco,monospace;padding:14px 18px 18px;white-space:pre-wrap;word-break:break-word}
+.p{color:#7ee787}.c{color:#7d8590}.o{color:#e6e6ea}.k{color:#79c0ff}.a{color:#d2a8ff}.u{color:#ffa657}</style><div class="win" style="width:1196px"><div class="bar"><div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div><div class="ttl">zsh — ~/demo</div></div><div class="term"><span class="c"># main-session [248292] lee el mensaje tal como llegó, con el envoltorio del canal</span>
+<span class="p">$</span> <span class="k">{ echo &#x27;&lt;cross-session-message from=&quot;uds:/tmp/cc-socks/57945.sock&quot; from-name=&quot;bugs&quot;&gt;&#x27;; cat tarea.txt; echo &#x27;&lt;/cross-session-message&gt;&#x27;; } | python3 ~/.agents/skills/run-in-session/ris.py parse --as 248292</span>
+<span class="o">{</span>
+<span class="o"> &quot;id&quot;: &quot;20261017-135659-82c2&quot;,</span>
+<span class="o"> &quot;to&quot;: &quot;main-session&quot;,</span>
+<span class="o"> &quot;goal&quot;: &quot;Correr la suite de la API y contar cuántos tests pasan&quot;,</span>
+<span class="o"> &quot;done_when&quot;: &quot;la respuesta trae el comando y su resultado&quot;,</span>
+<span class="o"> &quot;touches&quot;: [],</span>
+<span class="o"> &quot;forbidden&quot;: [</span>
+<span class="o">  &quot;push&quot;,</span>
+<span class="o">  &quot;editar archivos&quot;</span>
+<span class="o"> ],</span>
+<span class="o"> &quot;context&quot;: &quot;Es solo lectura.&quot;,</span>
+<span class="o"> &quot;from&quot;: &quot;bugs&quot;,</span>
+<span class="o"> &quot;kind&quot;: &quot;task&quot;</span>
+<span class="o">}</span>
+<span class="c"># hace el trabajo en su terminal y arma la respuesta para el from= del envoltorio</span>
+<span class="p">$</span> <span class="k">python3 ~/.agents/skills/run-in-session/ris.py task reply $(sed -n &#x27;s/^id: //p&#x27; tarea.txt) --as 248292 --from main-session --status done --summary &quot;1283 tests pasan, 7 saltados&quot; --evidence &quot;npm test: 1283 passed, 7 skipped&quot; | tee respuesta.txt</span>
+<span class="o">ris reply from main-session (done): 1283 tests pasan, 7 saltados [82c2]</span>
+<span class="o">--- ris-reply v1 ---</span>
+<span class="o">id: 20261017-135659-82c2</span>
+<span class="o">from: main-session</span>
+<span class="o">status: done</span>
+<span class="o">summary: 1283 tests pasan, 7 saltados</span>
+<span class="o">evidence:</span>
+<span class="o">- npm test: 1283 passed, 7 skipped</span>
+<span class="o">pending:</span>
+<span class="o">--- end ris-reply ---</span></div></div>

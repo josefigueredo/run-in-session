@@ -1,0 +1,3 @@
+$ ./install.sh
+$ readlink ~/.claude/skills/run-in-session ~/.agents/skills/run-in-session
+$ python3 ~/.agents/skills/run-in-session/ris.py task list --as 48ff1d
