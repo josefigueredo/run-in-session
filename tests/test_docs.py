@@ -56,6 +56,15 @@ class DocsTest(unittest.TestCase):
         for code in (cli.OK, cli.USAGE, cli.REFUSED, cli.INVALID, cli.VERSION, cli.UNKNOWN):
             self.assertRegex(FORMATOS, rf"\n\| {code} \| ")
 
+    def test_every_documented_log_command_passes_its_session_ref(self):
+        # task list, task show, task reply and parse read or write one session's log: without --as they exit 2.
+        # A runnable command is a python3 line or one with flags; a bare `ris parse` in prose is just the name.
+        command = re.compile(r"^python3 .*|ris(?:\.py)? (?:task (?:list|show|reply)|parse)\b[^`\n]*--[^`\n]*", re.M)
+        for path in (ROOT / "README.md", ROOT / "SKILL.md", DOCS / "formatos.md"):
+            for cmd in command.findall(path.read_text("utf-8")):
+                if re.search(r"ris(?:\.py)? (?:task (?:list|show|reply)|parse)\b", cmd):
+                    self.assertIn("--as", cmd, f"{path.name}: {cmd}")
+
     def test_every_status_is_documented(self):
         for status in formats.STATUSES:
             self.assertIn(f"`{status}`", FORMATOS)

@@ -14,10 +14,10 @@ y archivos.
 | Le decís al agente… | Y la skill… |
 |---|---|
 | *«Pedile a main-session que rebasee MCP sobre fix/20»* | busca la sesión en `ListAgents`, arma la tarea con `ris task new`, espera a que esté libre y se la manda; te dice qué tab mirar |
-| *(llega un mensaje con una tarea)* | la lee con `ris parse`, decide con sus propias reglas si le corresponde, la hace en su terminal y contesta con `ris task reply` a quien la mandó |
-| *(llega la respuesta)* | la lee con `ris parse`, verifica la evidencia (que el commit exista, que el comando dé eso) y te cuenta lo que verificó |
+| *(llega un mensaje con una tarea)* | la lee con `ris parse --as <su ref>`, decide con sus propias reglas si le corresponde, la hace en su terminal y contesta con `ris task reply … --as <su ref>` a quien la mandó |
+| *(llega la respuesta)* | la lee con `ris parse --as <su ref>`, verifica la evidencia (que el commit exista, que el comando dé eso) y te cuenta lo que verificó |
 | *«Tomá fix/20 para esta sesión»* | `ris claim`; si otra sesión ya la tiene, no la pisa y te avisa |
-| *«¿Qué tareas quedaron abiertas?»* | `ris task list --open` |
+| *«¿Qué tareas quedaron abiertas?»* | `ris task list --open --as <su ref>` |
 
 ## Cuándo una sesión y cuándo un subagente
 
@@ -54,7 +54,7 @@ buscar, auditar, portar.
 
 ```bash
 cd ~/CurrentCode/SPECKIT/Harness/run-in-session && ./install.sh   # enlaza ~/.agents/skills y ~/.claude/skills
-python3 ~/.agents/skills/run-in-session/ris.py task list           # tu registro, vacío al principio
+python3 ~/.agents/skills/run-in-session/ris.py task list --as 48ff1d   # el registro de esa sesión ([ref] de ListAgents), vacío al principio
 ```
 
 Requisitos: Claude Code con mensajes entre sesiones (`ListAgents` y `SendMessage`) y `python3` 3.9 o más, solo
