@@ -1,0 +1,26 @@
+⏺ Skill(run-in-session)
+  Successfully loaded skill
+
+── ris 1052 · tarea de bugs ──
+
+  Ran 1 shell command
+
+› Message from @bugs: ris task from bugs: Prueba B: decir el último commit de run-in-session [6888] (ctrl+o to expand)
+
+  Ran 1 shell command
+  "ris reply 1052 → bugs" → uds:/tmp/cc-socks/57945.sock
+  Allowed by auto mode classifier
+
+── fin ris 1052 · vuelvo a lo tuyo ──
+
+Now the queued one:
+
+  Ran 1 shell command
+
+── ris 6888 · tarea de bugs ──
+
+  Ran 1 shell command
+  "ris reply 6888 → bugs" → uds:/tmp/cc-socks/57945.sock
+  Allowed by auto mode classifier
+
+── fin ris 6888 · vuelvo a lo tuyo ──

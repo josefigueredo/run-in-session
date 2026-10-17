@@ -1,0 +1,19 @@
+<!doctype html><meta charset="utf-8"><style>*{box-sizing:border-box}body{margin:0;background:#cfd3e6;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif}
+.win{margin:22px;border-radius:12px;overflow:hidden;box-shadow:0 18px 50px rgba(20,20,40,.35),0 0 0 1px rgba(0,0,0,.25)}
+.bar{height:38px;background:#2b2b31;display:flex;align-items:center;padding:0 14px;position:relative}
+.dots span{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px}
+.dots .r{background:#ff5f57}.dots .y{background:#febc2e}.dots .g{background:#28c840}
+.ttl{position:absolute;left:0;right:0;text-align:center;color:#a9a9b3;font-size:13px}
+.term{background:#16161a;color:#e6e6ea;font:13.5px/1.5 Menlo,Monaco,monospace;padding:14px 18px 18px;white-space:pre-wrap;word-break:break-word}
+.p{color:#7ee787}.c{color:#7d8590}.o{color:#e6e6ea}.k{color:#79c0ff}.a{color:#d2a8ff}.u{color:#ffa657}</style><div class="win" style="width:1196px"><div class="bar"><div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div><div class="ttl">zsh — ~/demo</div></div><div class="term"><span class="c"># bugs le manda una tarea a prueba-ris mientras está ocupada, para cuando termine</span>
+<span class="p">$</span> <span class="k">python3 ~/.agents/skills/run-in-session/ris.py task new --as 48ff1d --from bugs --to prueba-ris --to-ref 82901f --when after-current --goal &quot;Decir el último commit de run-in-session&quot; --done &quot;la respuesta trae el hash corto&quot; &gt; b.txt &amp;&amp; sed -n &#x27;1p;/^when/p&#x27; b.txt</span>
+<span class="o">ris task from bugs: Decir el último commit de run-in-session [b4b2]</span>
+<span class="o">when: after-current</span>
+<span class="c"># prueba-ris la registra y no hace nada más: queda en su cola</span>
+<span class="p">$</span> <span class="k">python3 ~/.agents/skills/run-in-session/ris.py parse --as 82901f &lt; b.txt &gt; /dev/null &amp;&amp; python3 ~/.agents/skills/run-in-session/ris.py task list --inbox --as 82901f</span>
+<span class="o">20261017-150052-b4b2  received  bugs                          open      after-current  Decir el último commit de run-in-session</span>
+<span class="c"># cuando termina lo suyo, la toma y enmarca el trabajo con estas líneas</span>
+<span class="p">$</span> <span class="k">python3 ~/.agents/skills/run-in-session/ris.py task marks $(sed -n &#x27;s/^id: //p&#x27; b.txt) --as 82901f</span>
+<span class="o">── ris b4b2 · tarea de bugs ──</span>
+<span class="o">── fin ris b4b2 · vuelvo a lo tuyo ──</span>
+<span class="o">ris reply b4b2 → bugs</span></div></div>

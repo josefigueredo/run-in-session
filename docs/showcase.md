@@ -11,6 +11,7 @@ campo, en [Formatos](formatos.md).
 | verificar | Llega la respuesta | [Leer y verificar](#3-leer-y-verificar-la-respuesta) |
 | `ris claim` | «Tomá fix/20 para esta sesión» | [Reclamar una rama](#4-reclamar-una-rama) |
 | registro | «¿Qué tareas quedaron abiertas?» | [Qué queda registrado](#5-qué-queda-registrado) |
+| cola y marcas | La otra sesión está ocupada | [Cuando la otra sesión está ocupada](#6-cuando-la-otra-sesión-está-ocupada) |
 
 ---
 
@@ -112,6 +113,45 @@ reclamada por otra sesión no se toma: se le pide a esa sesión o a vos.
 Cada sesión tiene su registro, `~/.run-in-session/sessions/<ref>/log.jsonl`, con una línea por evento: la tarea que mandó,
 la que recibió, la respuesta que escribió y la que le llegó. `ris task list --as <ref>` arma una fila por tarea, `open`
 hasta que hay respuesta. El formato está en [Formatos](formatos.md#registro).
+
+## 6. Cuando la otra sesión está ocupada
+
+**Componente:** recibir · **Escribe:** el registro de esa sesión.
+
+Una tarea que llega mientras la otra sesión trabaja con su persona no la interrumpe: queda en cola hasta que termine.
+Y lo que la sesión hace para otra queda enmarcado en su terminal, así no se mezcla con lo de su persona.
+
+> *«Mandale a prueba-ris que me diga el último commit, para cuando termine lo que está haciendo»*
+
+El agente le agrega `--when after-current`. La sesión que la recibe la registra y no hace nada más con ella; cuando
+termina, la saca de su cola y la atiende entre dos marcas:
+
+![Terminal: task new con --when after-current, la tarea en la cola de --inbox y las marcas de task marks](img/terminal-cola.png)
+
+*Salida real de `ris` con un `HOME` de prueba.*
+
+Así se vio en la tab de `prueba-ris` el 2026-10-17. La tarea B llegó mientras corría A, un comando de 61 s. La sesión
+terminó A, la contestó, y recién después tomó B:
+
+![Tab de Claude Code de prueba-ris: la tarea 1052 enmarcada, la llegada de 6888 adentro, y 6888 atendida después](img/cc-cola.png)
+
+*Reconstruida del texto real de esa tab, recortada: faltan el aviso de suscripción del principio, el comando de
+`ris parse` antes de la primera marca y un resumen final que la regla actual ya no permite.*
+
+| Qué ves | Qué significa |
+|---|---|
+| `── ris 1052 · tarea de bugs ──` … `── fin ris 1052 · vuelvo a lo tuyo ──` | Todo lo de adentro es para `bugs`, no para vos |
+| `› Message from @bugs: … [6888]` adentro del marco de A | La llegada de B. Esa línea la escribe Claude Code donde cae; no corta A |
+| `"ris reply 1052 → bugs"` | El envío de la respuesta, con su resumen fijo |
+| *Now the queued one:* | Terminó A y saca B de la cola |
+
+**Qué pasa si algo sale mal**
+
+| Situación | Resultado |
+|---|---|
+| La tarea llega cuando la sesión está libre | La toma enseguida, aunque diga `after-current`: no hay trabajo que cortar |
+| La sesión atiende la tarea sin terminar lo suyo | Es una regla de la skill, no algo que imponga Claude Code. Lo que sí evita la interrupción es mandar con el aviso de que la otra quedó libre (paso 2 del [caso 1](#1-pasarle-una-tarea-a-otra-sesión)) |
+| Después del cierre escribe un resumen largo | La regla pide a lo sumo una línea después del cierre; si pasa, la sesión tenía cargada una versión vieja de la skill |
 
 ---
 

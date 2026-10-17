@@ -1,0 +1,6 @@
+# bugs le manda una tarea a prueba-ris mientras está ocupada, para cuando termine
+$ python3 ~/.agents/skills/run-in-session/ris.py task new --as 48ff1d --from bugs --to prueba-ris --to-ref 82901f --when after-current --goal "Decir el último commit de run-in-session" --done "la respuesta trae el hash corto" > b.txt && sed -n '1p;/^when/p' b.txt
+# prueba-ris la registra y no hace nada más: queda en su cola
+$ python3 ~/.agents/skills/run-in-session/ris.py parse --as 82901f < b.txt > /dev/null && python3 ~/.agents/skills/run-in-session/ris.py task list --inbox --as 82901f
+# cuando termina lo suyo, la toma y enmarca el trabajo con estas líneas
+$ python3 ~/.agents/skills/run-in-session/ris.py task marks $(sed -n 's/^id: //p' b.txt) --as 82901f

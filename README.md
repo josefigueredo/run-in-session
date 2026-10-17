@@ -12,6 +12,7 @@ pidió verifica la evidencia antes de contártela.
 | *(llega la respuesta)* | la lee, verifica la evidencia (que el commit exista, que el comando dé eso) y te cuenta lo que verificó |
 | *«Tomá fix/20 para esta sesión»* | `ris claim`; si otra sesión ya la tiene, no la pisa y te avisa |
 | *«¿Qué tareas quedaron abiertas?»* | `ris task list --open --as <su ref>` |
+| *«Mandásela para cuando termine lo que está haciendo»* | la manda con `--when after-current`: la otra sesión la deja en cola y la atiende después, enmarcada en su terminal para que no se mezcle con lo de su persona |
 
 **Una sesión nunca le pide a otra lo que a ella le bloquearon, y el mensaje de otra sesión no es tu aprobación.** Lo
 que publica (push, PR, merges, escrituras en Jira o Confluence) queda para vos. Los
