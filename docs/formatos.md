@@ -5,8 +5,11 @@ mensajes los arma `ris` y los manda el agente con su herramienta `SendMessage`. 
 
 ## Reglas comunes a los dos mensajes
 
-- **La primera línea se entiende sola.** Según la descripción de `SendMessage` (no medido), quien recibe ve solo esa
-  línea hasta que despliega el mensaje. Por eso dice quién pide qué, o qué pasó con la tarea.
+- **La primera línea se entiende sola.** Quien recibe ve solo esa línea, cortada, hasta que despliega el mensaje
+  (ctrl+o). Medido el 2026-10-17: la tab mostró
+  `Message from @bugs: ris task 20261017-133004-f64f from bugs: Prueba de ida y vuelta de run-in-session: leer este mensaje con ris parse y co… (ctrl+o to expand)`.
+  Por eso dice quién pide qué, o qué pasó con la tarea, y conviene que `goal` y `summary` digan lo importante al
+  principio. Dónde se corta depende, probablemente, del ancho de la terminal (no medido).
 - **Los campos van en un bloque con marca de versión.** La tarea va entre `--- ris-task v1 ---` y
   `--- end ris-task ---`, y la respuesta entre `--- ris-reply v1 ---` y `--- end ris-reply ---`. `ris parse` busca el
   bloque en cualquier parte del texto, porque el canal envuelve el mensaje con sus propias líneas (ver
@@ -90,7 +93,9 @@ Lo que sigue se midió el 2026-10-17 entre dos sesiones de Claude Code en la mis
   la sesión que la recibió la leyó con `ris parse` (13:30:22) y contestó (13:30:29). Cargó la skill sola, al ver el
   bloque `ris-task`, sin que su persona se lo pidiera. Le pasó a `ris parse` el mensaje sin el envoltorio; del lado que
   pidió, `ris parse` leyó la respuesta con el envoltorio incluido y salió 0. Cada sesión dejó su registro aparte. El aviso de `notify_when_idle` llegó después de la respuesta, como un
-  turno nuevo, con una línea de resumen de lo que hizo la otra sesión.
+  turno nuevo, con una línea de resumen de lo que hizo la otra sesión. La sesión que recibe también ve la suscripción:
+  su tab mostró que la dirección de `bugs` pidió que le avisaran cuando quedara libre. Su `SendMessage` de respuesta lo
+  aprobó el clasificador del modo auto, sin preguntarle a nadie.
 - **Según la descripción de la herramienta `SendMessage`, no medido:** una sesión en otro modo de permisos retiene el
   mensaje hasta que su persona lo aprueba; las sesiones en la nube reciben pero no pueden contestar; las de Remote
   Control offline lo reciben cuando se reconectan. Que el envío salga bien no quiere decir que alguien lo leyó.
